@@ -125,65 +125,93 @@ from .models import User, Task, TaskStatus # Ensure TaskStatus is imported
 CURRENT_USER_ID = None
 POINTS_PER_TASK = 10 # Define points for completing a task
 
+# Import service functions
+from .services import create_user as create_user_service, verify_user_login as verify_user_login_service
+
 def get_db_session() -> Session:
     """Helper function to get a new database session."""
     return SessionLocal()
 
 def register_user():
-    """Handles new user registration."""
+    """Handles new user registration using the user service."""
     print("\n--- Register New User ---")
+    username = input("Enter username: ").strip()
+    if not username:
+        print("Username cannot be empty.")
+        return
+
+    password = getpass.getpass("Enter password: ")
+    if not password:
+        print("Password cannot be empty.")
+        return
+    password_confirm = getpass.getpass("Confirm password: ")
+    if password != password_confirm:
+        print("Passwords do not match.")
+        return
+
+    db = get_db_session()
+# Import service functions and custom exceptions
+from .services import (
+    create_user as create_user_service,
+    verify_user_login as verify_user_login_service,
+    UsernameExistsError,
+    UserCreationError
+)
+
+def get_db_session() -> Session:
+    """Helper function to get a new database session."""
+    return SessionLocal()
+
+def register_user():
+    """Handles new user registration using the user service."""
+    print("\n--- Register New User ---")
+    username = input("Enter username: ").strip()
+    if not username:
+        print("Username cannot be empty.")
+        return
+
+    password = getpass.getpass("Enter password: ")
+    if not password:
+        print("Password cannot be empty.")
+        return
+    password_confirm = getpass.getpass("Confirm password: ")
+    if password != password_confirm:
+        print("Passwords do not match.")
+        return
+
     db = get_db_session()
     try:
-        username = input("Enter username: ").strip()
-        if not username:
-            print("Username cannot be empty.")
-            return
-
-        # Check if username already exists
-        existing_user = db.query(User).filter(User.username == username).first()
-        if existing_user:
-            print(f"Username '{username}' already exists. Please choose a different one.")
-            return
-
-        password = getpass.getpass("Enter password: ")
-        if not password:
-            print("Password cannot be empty.")
-            return
-        password_confirm = getpass.getpass("Confirm password: ")
-        if password != password_confirm:
-            print("Passwords do not match.")
-            return
-
-        new_user = User(username=username)
-        new_user.set_password(password) # Use the method from the User model
-        db.add(new_user)
-        db.commit()
-        print(f"User '{username}' registered successfully!")
+        new_user_obj = create_user_service(db_session=db, username=username, password=password)
+        print(f"User '{new_user_obj.username}' registered successfully!")
+    except UsernameExistsError:
+        print(f"Username '{username}' already exists. Please choose a different one.")
+    except UserCreationError as e:
+        print(f"Could not register user due to a database or unexpected error: {e}")
     except Exception as e:
-        db.rollback()
-        print(f"An error occurred during registration: {e}")
+        print(f"An unexpected error occurred during registration: {e}")
     finally:
         db.close()
 
 def login_user():
-    """Handles user login and sets CURRENT_USER_ID."""
+    """Handles user login using the user service and sets CURRENT_USER_ID."""
     global CURRENT_USER_ID
     print("\n--- User Login ---")
+    username = input("Enter username: ").strip()
+    password = getpass.getpass("Enter password: ")
+
     db = get_db_session()
     try:
-        username = input("Enter username: ").strip()
-        password = getpass.getpass("Enter password: ")
-
-        user = db.query(User).filter(User.username == username).first()
-
-        if user and user.check_password(password):
-            CURRENT_USER_ID = user.id
+        # Use the service function to verify login
+        user_obj = verify_user_login_service(db_session=db, username=username, password=password)
+        if user_obj:
+            CURRENT_USER_ID = user_obj.id
             print(f"Welcome, {username}! You are now logged in.")
         else:
             CURRENT_USER_ID = None
             print("Invalid username or password.")
     except Exception as e:
-        print(f"An error occurred during login: {e}")
+        # This generic catch is less likely if services.py handles its own DB exceptions
+        print(f"An unexpected error occurred during login: {e}")
     finally:
         db.close()
 
