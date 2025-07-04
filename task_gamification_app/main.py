@@ -24,7 +24,11 @@ def main():
     finally:
         db.close()
 
-    print("To start the CLI (once implemented), you would run a function from app.cli here.")
+    print("Application initialized. Starting CLI...")
+    # Import and run the CLI
+    from app.cli import run_cli
+    run_cli()
+
     print("Exiting application.")
 
 

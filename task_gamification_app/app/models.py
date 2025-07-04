@@ -1,5 +1,6 @@
 import datetime
 import enum # Import the standard enum module
+import bcrypt # Import bcrypt for password hashing
 from sqlalchemy import create_engine, Column, Integer, String, DateTime, ForeignKey, Enum as SAEnum
 from sqlalchemy.orm import relationship, sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
@@ -16,10 +17,19 @@ class User(Base):
 
     tasks = relationship("Task", back_populates="owner")
 
+    def set_password(self, password: str):
+        """Hashes the password and stores it."""
+        salt = bcrypt.gensalt()
+        self.password_hash = bcrypt.hashpw(password.encode('utf-8'), salt).decode('utf-8')
+
+    def check_password(self, password: str) -> bool:
+        """Verifies the given password against the stored hash."""
+        return bcrypt.checkpw(password.encode('utf-8'), self.password_hash.encode('utf-8'))
+
     def __repr__(self):
         return f"<User(id={self.id}, username='{self.username}', points={self.points})>"
 
-class TaskStatus(enum.Enum): # Changed from SAEnum to enum.Enum
+class TaskStatus(enum.Enum):
     PENDING = "pending"
     COMPLETED = "completed"
 
