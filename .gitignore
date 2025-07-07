@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+
+# Databases
+*.db
+*.sqlite
+*.sqlite3
+task_gamification.db # Covers root .db file
+task_gamification_app/task_gamification.db # Covers .db file inside app folder
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+
+# OS-specific
+.DS_Store # macOS
+*.swp # Vim swap files
+
+# IDE specific
+.idea/ # JetBrains
+.vscode/ # VS Code
