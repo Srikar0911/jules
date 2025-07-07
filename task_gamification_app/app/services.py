@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
+from typing import Union # Import Union
 from .models import User
 
 # Custom Exceptions for the service layer
@@ -43,7 +44,7 @@ def create_user(db_session: Session, username: str, password: str) -> User:
         raise UserCreationError(f"An unexpected error occurred during user creation: {e}")
 
 
-def verify_user_login(db_session: Session, username: str, password: str) -> User | None:
+def verify_user_login(db_session: Session, username: str, password: str) -> Union[User, None]:
     """
     Verifies user credentials.
     Returns the User object if login is successful, None otherwise.
