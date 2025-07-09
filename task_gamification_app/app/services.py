@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
-from typing import Union # Import Union
+from typing import Union, List # Import Union and List
 import datetime
 from .models import User, Task, TaskStatus
 
