@@ -38,3 +38,36 @@ class LoginForm(FlaskForm):
     password = PasswordField('Password', validators=[DataRequired()])
     remember = BooleanField('Remember Me') # Optional: for "remember me" functionality
     submit = SubmitField('Login')
+
+# Forms for Task Management
+from wtforms import TextAreaField, DateField
+from wtforms.validators import Optional
+
+class TaskForm(FlaskForm):
+    description = TextAreaField('Task Description', validators=[DataRequired(), Length(min=1, max=500)])
+    due_date = DateField('Due Date (YYYY-MM-DD)', validators=[Optional()], format='%Y-%m-%d')
+    submit = SubmitField('Save Task')
+    delete = SubmitField('Delete Task') # For including delete on an edit form
+    complete = SubmitField('Mark Complete') # For quick actions
+
+class CreateTaskForm(TaskForm):
+    # Inherits description, due_date, submit
+    # Remove delete and complete as they don't make sense on a pure creation form
+    delete = None
+    complete = None
+    submit = SubmitField('Create Task')
+
+class UpdateTaskForm(TaskForm):
+    # Inherits description, due_date, submit
+    # `submit` will be "Save Task"
+    # `delete` can be used on this form
+    pass # Uses all fields from TaskForm, submit label is fine.
+
+class FilterTasksForm(FlaskForm):
+    status = StringField('Status Filter', validators=[Optional()]) # User might type 'pending', 'completed', or clear it for 'all'
+    # Alternatively, use SelectField if TaskStatus enum is easily available here
+    # from ..app.models import TaskStatus
+    # status = SelectField('Filter by Status',
+    #                      choices=[('', 'All'), ('PENDING', 'Pending'), ('COMPLETED', 'Completed')],
+    #                      validators=[Optional()])
+    submit = SubmitField('Filter')

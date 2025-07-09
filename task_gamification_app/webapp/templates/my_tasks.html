@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block title %}{{ title }} - Task Gamification{% endblock %}
+
+{% block page_content %}
+<div class="container">
+    <h1>{{ title }}</h1>
+    <hr>
+
+    <!-- Create Task Form -->
+    <h2>Create New Task</h2>
+    <form method="POST" action="{{ url_for('my_tasks', status=current_filter_status_str) }}" class="form">
+        {{ create_form.hidden_tag() }}
+        {{ wtf.form_field(create_form.description, class="form-control", rows="3") }}
+        {{ wtf.form_field(create_form.due_date, class="form-control") }}
+        <button type="submit" name="create_submit" class="btn btn-primary mt-2">Create Task</button>
+    </form>
+    <hr>
+
+    <!-- Filter Tasks Form -->
+    <h2>Filter Tasks</h2>
+    <form method="GET" action="{{ url_for('my_tasks') }}" class="form-inline">
+        <div class="form-group mr-2">
+            <label for="status" class="mr-2">Status:</label>
+            <select name="status" id="status" class="form-control">
+                <option value="" {% if not current_filter_status_str %}selected{% endif %}>All</option>
+                <option value="PENDING" {% if current_filter_status_str == 'PENDING' %}selected{% endif %}>Pending</option>
+                <option value="COMPLETED" {% if current_filter_status_str == 'COMPLETED' %}selected{% endif %}>Completed</option>
+            </select>
+        </div>
+        <button type="submit" class="btn btn-info">Filter</button>
+    </form>
+    <hr>
+
+    <!-- Task List -->
+    <h2>Your Tasks</h2>
+    {% if tasks %}
+        <ul class="list-group">
+            {% for task in tasks %}
+                <li class="list-group-item d-flex justify-content-between align-items-center
+                           {% if task.status == TaskStatus.COMPLETED %}list-group-item-success{% endif %}
+                           {% if task.due_date and task.due_date < datetime.datetime.utcnow() and task.status == TaskStatus.PENDING %}list-group-item-danger{% endif %}">
+                    <div>
+                        <strong>{{ task.description }}</strong><br>
+                        <small class="text-muted">
+                            Status: {{ task.status.value }} |
+                            Created: {{ task.creation_date.strftime('%Y-%m-%d %H:%M') }}
+                            {% if task.due_date %} | Due: {{ task.due_date.strftime('%Y-%m-%d') }} {% endif %}
+                            {% if task.status == TaskStatus.COMPLETED and task.completion_date %} | Completed: {{ task.completion_date.strftime('%Y-%m-%d %H:%M') }} {% endif %}
+                        </small>
+                    </div>
+                    <div class="task-actions">
+                        {% if task.status == TaskStatus.PENDING %}
+                            <form method="POST" action="{{ url_for('complete_task_route', task_id=task.id) }}" style="display: inline;">
+                                <button type="submit" class="btn btn-success btn-sm mr-1">Complete</button>
+                            </form
+                            <a href="{{ url_for('update_task', task_id=task.id) }}" class="btn btn-warning btn-sm mr-1">Edit</a>
+                        {% endif %}
+                        <form method="POST" action="{{ url_for('delete_task_route', task_id=task.id) }}" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this task?');">
+                            <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                        </form>
+                    </div>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>You have no tasks matching the current filter. Well done, or time to add some!</p>
+    {% endif %}
+</div>
+{% endblock %}

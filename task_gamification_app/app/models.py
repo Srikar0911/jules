@@ -40,13 +40,14 @@ class Task(Base):
     description = Column(String, nullable=False)
     status = Column(SAEnum(TaskStatus, name="task_status_enum"), default=TaskStatus.PENDING, nullable=False)
     creation_date = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
+    due_date = Column(DateTime, nullable=True)  # Added due_date
     completion_date = Column(DateTime, nullable=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
 
     owner = relationship("User", back_populates="tasks")
 
     def __repr__(self):
-        return f"<Task(id={self.id}, description='{self.description}', status='{self.status}', user_id={self.user_id})>"
+        return f"<Task(id={self.id}, description='{self.description}', status='{self.status}', due_date='{self.due_date}', user_id={self.user_id})>"
 
 # The engine creation and table creation logic is now primarily in app/db.py.
 # The __main__ block here can be used for direct model testing if needed,
