@@ -27,10 +27,19 @@
 
 *   Keep `requirements.txt` updated with all necessary dependencies.
 
-## Future Development (Web Interface)
+## Web Application (Flask)
 
-*   If a web interface is developed later (e.g., using Flask or Django), ensure a clear separation of concerns between the core logic and the web presentation layer.
-*   The existing core logic (`models.py`, `db.py`) should be reusable.
+*   The web application is built using Flask.
+*   Key files for the webapp are located in `task_gamification_app/webapp/`.
+    *   `routes.py`: Defines the URL routes and their corresponding view functions.
+    *   `forms.py`: Contains form definitions using Flask-WTF.
+    *   `templates/`: Holds HTML templates, with `base.html` as the main layout.
+    *   `__init__.py`: Initializes the Flask app.
+*   The existing core logic (`app/models.py`, `app/services.py`, `app/db.py`) is used by the web application.
+*   **Navigation**:
+    *   The main navigation bar is in `webapp/templates/base.html`.
+    *   It includes links to "Home", "About", and "Contact" pages. The "About" and "Contact" pages are static informational pages.
+    *   User-specific links (Login, Register, Logout, My Tasks, Leaderboard) are also present and adapt based on login status.
 
 ## Gamification Logic
 
