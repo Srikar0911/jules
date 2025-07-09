@@ -53,9 +53,10 @@ class TaskForm(FlaskForm):
 class CreateTaskForm(TaskForm):
     # Inherits description, due_date, submit
     # Remove delete and complete as they don't make sense on a pure creation form
+    submit = None # Unset the inherited submit field
     delete = None
     complete = None
-    submit = SubmitField('Create Task')
+    create_submit = SubmitField('Create Task')
 
 class UpdateTaskForm(TaskForm):
     # Inherits description, due_date, submit

@@ -11,8 +11,8 @@ app.config['SECRET_KEY'] = os.environ.get('FLASK_SECRET_KEY', 'a_very_secret_def
 
 # Initialize Bootstrap-Flask
 # Bootstrap-Flask typically uses Bootstrap 4 by default with Bootstrap4 class,
-# or Bootstrap5 with Bootstrap5 class. Let's stick to Bootstrap 4 for compatibility
-# with the `bootstrap/wtf.html` macros often found with older Flask-Bootstrap setups.
+# or Bootstrap5 with Bootstrap5 class. We are using Bootstrap 4.
+# The form-rendering macros are located in "bootstrap/form.html" with this library.
 # If we wanted Bootstrap 5, we'd use `from flask_bootstrap import Bootstrap5` and `Bootstrap5(app)`.
 bootstrap = Bootstrap4(app)
 

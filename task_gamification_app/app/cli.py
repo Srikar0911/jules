@@ -12,9 +12,9 @@ from .services import (
     create_user as create_user_service,
     verify_user_login as verify_user_login_service,
     create_task_for_user,
-    get_pending_tasks_for_user,
+    get_tasks_for_user,
     complete_task,
-    get_leaderboard_users,
+    get_leaderboard_users_paginated, # Use the new paginated and more detailed function
     POINTS_PER_TASK,
     UsernameExistsError,
     UserCreationError,
@@ -22,6 +22,7 @@ from .services import (
     TaskCompletionError,
     ServiceError
 )
+from .models import TaskStatus # Import TaskStatus for filtering
 
 def get_db_session() -> Session:
     """Helper function to get a new database session."""
@@ -120,12 +121,14 @@ def view_tasks_cli():
     print("\n--- Your Pending Tasks ---")
     db_session = get_db_session()
     try:
-        tasks = get_pending_tasks_for_user(db_session=db_session, user_id=CURRENT_USER_ID)
+        # Use the more generic get_tasks_for_user with a specific status
+        tasks = get_tasks_for_user(db_session=db_session, user_id=CURRENT_USER_ID, status=TaskStatus.PENDING)
         if not tasks:
             print("No pending tasks found.")
         else:
             for task in tasks:
-                print(f"  ID: {task.id} | Description: {task.description} | Created: {task.creation_date.strftime('%Y-%m-%d %H:%M')}")
+                due_date_str = f" | Due: {task.due_date.strftime('%Y-%m-%d')}" if task.due_date else ""
+                print(f"  ID: {task.id} | Description: {task.description} | Created: {task.creation_date.strftime('%Y-%m-%d %H:%M')}{due_date_str}")
     except ServiceError as e:
         print(f"An error occurred while fetching tasks: {e}")
     finally:
@@ -191,14 +194,17 @@ def view_leaderboard_cli():
     print("\n--- Leaderboard ---")
     db_session = get_db_session()
     try:
-        users = get_leaderboard_users(db_session=db_session)
-        if not users:
+        # Fetch the top 10 users for the CLI view (first page)
+        leaderboard_entries, _ = get_leaderboard_users_paginated(db_session=db_session, page=1, per_page=10)
+        if not leaderboard_entries:
             print("No users found to display on the leaderboard.")
         else:
-            print(f"{'Rank':<5} | {'Username':<20} | {'Points':>10}")
-            print("-" * 40)
-            for i, user in enumerate(users):
-                print(f"{i+1:<5} | {user.username:<20} | {user.points:>10}")
+            # Updated header to include new information
+            print(f"{'Rank':<5} | {'Username':<20} | {'Points':>10} | {'Tasks Completed':>15}")
+            print("-" * 65)
+            for entry in leaderboard_entries:
+                # The rank is now provided directly by the service function
+                print(f"{entry['rank']:<5} | {entry['username']:<20} | {entry['points']:>10} | {entry['completed_tasks_count']:>15}")
     except ServiceError as e:
         print(f"An error occurred while fetching the leaderboard: {e}")
     finally:

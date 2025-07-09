@@ -167,43 +167,42 @@ def my_tasks():
 @login_required
 def update_task(task_id):
     db_session = SessionLocal()
-    user_id = session['user_id']
     try:
+        user_id = session['user_id']
         # Fetch the task first to ensure it belongs to the user and exists for GET request
         task = db_session.query(Task).filter(Task.id == task_id, Task.user_id == user_id).first()
         if not task:
             flash('Task not found or you do not have permission to edit it.', 'danger')
-            db_session.close()
             return redirect(url_for('my_tasks'))
 
         form = UpdateTaskForm(obj=task) # Pre-populate form with task data for GET
 
         if form.validate_on_submit():
-            try:
-                updated_task = update_task_service(
-                    db_session=db_session,
-                    task_id=task_id,
-                    user_id=user_id,
-                    description=form.description.data,
-                    due_date=form.due_date.data,
-                    set_due_date_none=(form.due_date.data is None) # Explicitly set due_date to None if form field is empty
-                )
-                flash('Task updated successfully!', 'success')
-                return redirect(url_for('my_tasks'))
-            except TaskNotFoundError:
-                flash('Task not found or you do not have permission to edit it.', 'danger')
-            except TaskServiceError as e:
-                flash(f'Error updating task: {e}', 'danger')
-            except Exception as e:
-                flash(f'An unexpected error occurred: {e}', 'danger')
+            update_task_service(
+                db_session=db_session,
+                task_id=task_id,
+                user_id=user_id,
+                description=form.description.data,
+                due_date=form.due_date.data,
+                set_due_date_none=(form.due_date.data is None) # Explicitly set due_date to None if form field is empty
+            )
+            flash('Task updated successfully!', 'success')
+            return redirect(url_for('my_tasks'))
 
-        db_session.close() # Close session if not submitted or if error during submit
+        # This will render on a GET request or if form validation fails
         return render_template('update_task.html', title='Update Task', form=form, task_id=task_id)
 
-    except Exception as e:
-        flash(f'An error occurred: {e}', 'danger')
-        if db_session: db_session.close()
+    except TaskNotFoundError:
+        flash('Task not found or you do not have permission to edit it.', 'danger')
         return redirect(url_for('my_tasks'))
+    except TaskServiceError as e:
+        flash(f'Error updating task: {e}', 'danger')
+    except Exception as e:
+        flash(f'An unexpected error occurred: {e}', 'danger')
+    finally:
+        if db_session:
+            db_session.close()
+    return redirect(url_for('my_tasks')) # Redirect if any exception occurred and was handled
 
 
 @app.route('/task/<int:task_id>/complete', methods=['POST'])

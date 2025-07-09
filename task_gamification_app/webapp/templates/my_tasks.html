@@ -1,71 +1,64 @@
 {% extends "base.html" %}
-{% import "bootstrap/wtf.html" as wtf %}
-
-{% block title %}{{ title }} - Task Gamification{% endblock %}
+{% import "bootstrap/form.html" as bform %}
 
 {% block page_content %}
-<div class="container">
-    <h1>{{ title }}</h1>
-    <hr>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>My Tasks</h1>
+        <button class="btn btn-primary" type="button" data-toggle="collapse" data-target="#createTaskCollapse" aria-expanded="false" aria-controls="createTaskCollapse">
+            Create New Task
+        </button>
+    </div>
 
-    <!-- Create Task Form -->
-    <h2>Create New Task</h2>
-    <form method="POST" action="{{ url_for('my_tasks', status=current_filter_status_str) }}" class="form">
-        {{ create_form.hidden_tag() }}
-        {{ wtf.form_field(create_form.description, class="form-control", rows="3") }}
-        {{ wtf.form_field(create_form.due_date, class="form-control") }}
-        <button type="submit" name="create_submit" class="btn btn-primary mt-2">Create Task</button>
-    </form>
-    <hr>
-
-    <!-- Filter Tasks Form -->
-    <h2>Filter Tasks</h2>
-    <form method="GET" action="{{ url_for('my_tasks') }}" class="form-inline">
-        <div class="form-group mr-2">
-            <label for="status" class="mr-2">Status:</label>
-            <select name="status" id="status" class="form-control">
-                <option value="" {% if not current_filter_status_str %}selected{% endif %}>All</option>
-                <option value="PENDING" {% if current_filter_status_str == 'PENDING' %}selected{% endif %}>Pending</option>
-                <option value="COMPLETED" {% if current_filter_status_str == 'COMPLETED' %}selected{% endif %}>Completed</option>
-            </select>
+    {# Collapsible Task Creation Form for Bootstrap 4 #}
+    <div class="collapse" id="createTaskCollapse">
+        <div class="card card-body mb-4">
+            {# The route checks for 'create_submit' to distinguish from filter form #}
+            {{ bform.render_form(create_form, action=url_for('my_tasks', status=current_filter_status_str), button_map={'create_submit': 'primary'}) }}
         </div>
-        <button type="submit" class="btn btn-info">Filter</button>
-    </form>
-    <hr>
+    </div>
 
-    <!-- Task List -->
-    <h2>Your Tasks</h2>
-    {% if tasks %}
-        <ul class="list-group">
-            {% for task in tasks %}
-                <li class="list-group-item d-flex justify-content-between align-items-center
-                           {% if task.status == TaskStatus.COMPLETED %}list-group-item-success{% endif %}
-                           {% if task.due_date and task.due_date < datetime.datetime.utcnow() and task.status == TaskStatus.PENDING %}list-group-item-danger{% endif %}">
-                    <div>
-                        <strong>{{ task.description }}</strong><br>
-                        <small class="text-muted">
-                            Status: {{ task.status.value }} |
-                            Created: {{ task.creation_date.strftime('%Y-%m-%d %H:%M') }}
-                            {% if task.due_date %} | Due: {{ task.due_date.strftime('%Y-%m-%d') }} {% endif %}
-                            {% if task.status == TaskStatus.COMPLETED and task.completion_date %} | Completed: {{ task.completion_date.strftime('%Y-%m-%d %H:%M') }} {% endif %}
-                        </small>
-                    </div>
-                    <div class="task-actions">
-                        {% if task.status == TaskStatus.PENDING %}
-                            <form method="POST" action="{{ url_for('complete_task_route', task_id=task.id) }}" style="display: inline;">
-                                <button type="submit" class="btn btn-success btn-sm mr-1">Complete</button>
-                            </form
-                            <a href="{{ url_for('update_task', task_id=task.id) }}" class="btn btn-warning btn-sm mr-1">Edit</a>
-                        {% endif %}
-                        <form method="POST" action="{{ url_for('delete_task_route', task_id=task.id) }}" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this task?');">
-                            <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+    {# Task Filter Form #}
+    <div class="card mb-4">
+        <div class="card-header">Filter Tasks</div>
+        <div class="card-body">
+            {# This form uses GET to change the URL with query parameters #}
+            {{ bform.render_form(filter_form, action=url_for('my_tasks'), method='get', button_map={'submit': 'secondary'}) }}
+        </div>
+    </div>
+
+    {# Task List #}
+    <h3>
+        {% if current_filter_status_str == 'PENDING' %}Pending Tasks
+        {% elif current_filter_status_str == 'COMPLETED' %}Completed Tasks
+        {% else %}All Tasks{% endif %}
+    </h3>
+    <ul class="list-group">
+        {% for task in tasks %}
+            <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
+                <div class="mr-auto">
+                    <p class="mb-1">
+                        {% if task.status == TaskStatus.COMPLETED %}<s>{{ task.description }}</s>{% else %}{{ task.description }}{% endif %}
+                    </p>
+                    <small class="text-muted">
+                        Created: {{ task.creation_date.strftime('%Y-%m-%d') }}
+                        {% if task.due_date %} | Due: {{ task.due_date.strftime('%Y-%m-%d') }}{% endif %}
+                        {% if task.status == TaskStatus.COMPLETED and task.completion_date %} | Completed: {{ task.completion_date.strftime('%Y-%m-%d') }}{% endif %}
+                    </small>
+                </div>
+                <div class="btn-group mt-2 mt-md-0" role="group">
+                    {% if task.status == TaskStatus.PENDING %}
+                        <form action="{{ url_for('complete_task_route', task_id=task.id) }}" method="post" class="d-inline">
+                            <button type="submit" class="btn btn-sm btn-success">Complete</button>
                         </form>
-                    </div>
-                </li>
-            {% endfor %}
-        </ul>
-    {% else %}
-        <p>You have no tasks matching the current filter. Well done, or time to add some!</p>
-    {% endif %}
-</div>
+                        <a href="{{ url_for('update_task', task_id=task.id) }}" class="btn btn-sm btn-warning">Edit</a>
+                    {% endif %}
+                    <form action="{{ url_for('delete_task_route', task_id=task.id) }}" method="post" class="d-inline">
+                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this task?');">Delete</button>
+                    </form>
+                </div>
+            </li>
+        {% else %}
+            <li class="list-group-item">No tasks found for this filter.</li>
+        {% endfor %}
+    </ul>
 {% endblock %}
