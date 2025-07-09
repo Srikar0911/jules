@@ -1,33 +1,30 @@
 {% extends "base.html" %}
 
-{% block content %}
-    <div class="about-section">
-        <h2>About TaskGamify</h2>
-        <p>
-            Welcome to TaskGamify, the application designed to make your to-do list more engaging and fun!
-        </p>
-        <p>
-            Our mission is to blend productivity with play. We believe that by adding elements of gamification—like points for completing tasks and a competitive leaderboard—we can motivate you to stay on top of your goals, whether they are for work, study, or personal projects.
-        </p>
-        <h3>How It Works</h3>
-        <ul>
-            <li><strong>Create Tasks:</strong> Add the things you need to get done.</li>
-            <li><strong>Earn Points:</strong> Complete your tasks to earn points.</li>
-            <li><strong>Climb the Leaderboard:</strong> See how you stack up against other users. A little friendly competition can be a great motivator.</li>
-            <li><strong>Stay Organized:</strong> Keep all your tasks in one place, and track your progress over time.</li>
-        </ul>
-        <p>
-            This project is built with Python, Flask, and SQLAlchemy, demonstrating a clean separation between the core application logic and the web interface.
-        </p>
-        <p>
-            Ready to get started? <a href="{{ url_for('register') }}">Sign up now</a> and turn your tasks into triumphs!
-        </p>
+{% block page_content %}
+    <div class="container mt-4"> {# Using Bootstrap container and margin #}
+        <div class="row">
+            <div class="col-md-10 offset-md-1"> {# Centering content and providing some padding #}
+                <h2 class="mb-3">About TaskGamify</h2>
+                <p class="lead">
+                    Welcome to TaskGamify, the application designed to make your to-do list more engaging and fun!
+                </p>
+                <p>
+                    Our mission is to blend productivity with play. We believe that by adding elements of gamification—like points for completing tasks and a competitive leaderboard—we can motivate you to stay on top of your goals, whether they are for work, study, or personal projects.
+                </p>
+                <h3 class="mt-4 mb-3">How It Works</h3>
+                <ul class="list-group list-group-flush mb-4">
+                    <li class="list-group-item"><strong>Create Tasks:</strong> Add the things you need to get done.</li>
+                    <li class="list-group-item"><strong>Earn Points:</strong> Complete your tasks to earn points.</li>
+                    <li class="list-group-item"><strong>Climb the Leaderboard:</strong> See how you stack up against other users. A little friendly competition can be a great motivator.</li>
+                    <li class="list-group-item"><strong>Stay Organized:</strong> Keep all your tasks in one place, and track your progress over time.</li>
+                </ul>
+                <p>
+                    This project is built with Python, Flask, and SQLAlchemy, demonstrating a clean separation between the core application logic and the web interface. It now uses Bootstrap for a clean, responsive design.
+                </p>
+                <p class="text-center mt-4">
+                    <a href="{{ url_for('register') }}" class="btn btn-success btn-lg">Sign up now</a> and turn your tasks into triumphs!
+                </p>
+            </div>
+        </div>
     </div>
-
-    <style>
-        .about-section h2, .about-section h3 { color: #333; }
-        .about-section p { line-height: 1.6; margin-bottom: 1em; }
-        .about-section ul { list-style-type: disc; padding-left: 20px; }
-        .about-section ul li { margin-bottom: 0.5em; }
-    </style>
 {% endblock %}
