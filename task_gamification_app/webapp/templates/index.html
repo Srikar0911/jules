@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <div style="text-align: center; padding-top: 50px;">
+        {% if username %}
+            <h2>Welcome back, {{ username }}!</h2>
+            <p>Ready to tackle some tasks and climb the leaderboard?</p>
+            <p><a href="#">View Your Tasks (TODO)</a></p>
+        {% else %}
+            <h2>Welcome to TaskGamify!</h2>
+            <p>The fun way to manage your tasks and compete with peers.</p>
+            <p>
+                <a href="{{ url_for('register') }}">Sign Up</a> or
+                <a href="{{ url_for('login') }}">Log In</a> to get started.
+            </p>
+        {% endif %}
+    </div>
+{% endblock %}
