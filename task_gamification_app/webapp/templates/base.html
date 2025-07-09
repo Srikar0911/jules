@@ -37,6 +37,8 @@
         <nav>
             <ul>
                 <li><a href="{{ url_for('index') }}">Home</a></li>
+                <li><a href="{{ url_for('about') }}">About</a></li>
+                <li><a href="{{ url_for('contact') }}">Contact</a></li>
                 {% if session.user_id %}
                     <li><span>Hi, {{ session.username }}!</span></li>
                     <!-- Add links for logged-in users here, e.g., Tasks, Leaderboard -->
