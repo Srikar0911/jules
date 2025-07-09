@@ -1,8 +1,11 @@
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 from typing import Union # Import Union
-from .models import User
+import datetime
+from .models import User, Task, TaskStatus
 
+# Constants
+POINTS_PER_TASK = 10 # Define points for completing a task
 # Custom Exceptions for the service layer
 class ServiceError(Exception):
     """Base class for service layer exceptions."""
@@ -14,6 +17,14 @@ class UsernameExistsError(ServiceError):
 
 class UserCreationError(ServiceError):
     """Raised for other errors during user creation."""
+    pass
+
+class TaskNotFoundError(ServiceError):
+    """Raised when a task is not found or doesn't belong to the user."""
+    pass
+
+class TaskCompletionError(ServiceError):
+    """Raised for errors during task completion."""
     pass
 
 def create_user(db_session: Session, username: str, password: str) -> User:
@@ -54,12 +65,55 @@ def verify_user_login(db_session: Session, username: str, password: str) -> Unio
         return user
     return None
 
-# We can add more service functions here later for tasks, etc.
-# For example:
-# def create_task_for_user(db_session: Session, user_id: int, description: str) -> Task | None: ...
-# def get_tasks_for_user(db_session: Session, user_id: int) -> list[Task]: ...
-# def complete_task_for_user(db_session: Session, task_id: int, user_id: int) -> Task | None: ...
-# def get_leaderboard_users(db_session: Session, limit: int = 10) -> list[User]: ...
+def create_task_for_user(db_session: Session, user_id: int, description: str) -> Task:
+    """Creates a new task for a given user."""
+    new_task = Task(description=description, user_id=user_id)
+    db_session.add(new_task)
+    try:
+        db_session.commit()
+        db_session.refresh(new_task)
+        return new_task
+    except SQLAlchemyError as e:
+        db_session.rollback()
+        raise ServiceError(f"Database error occurred while creating task: {e}")
 
-# Note: Error handling here is basic (returning None).
-# In a more complex app, custom exceptions or more detailed error objects might be better.
+def get_pending_tasks_for_user(db_session: Session, user_id: int) -> List[Task]:
+    """Retrieves all pending tasks for a given user."""
+    return db_session.query(Task).filter(
+        Task.user_id == user_id,
+        Task.status == TaskStatus.PENDING
+    ).order_by(Task.creation_date).all()
+
+def complete_task(db_session: Session, task_id: int, user_id: int) -> Task:
+    """Marks a task as completed and awards points to the user."""
+    task = db_session.query(Task).filter(
+        Task.id == task_id,
+        Task.user_id == user_id
+    ).first()
+
+    if not task:
+        raise TaskNotFoundError(f"Task with ID {task_id} not found or does not belong to you.")
+
+    if task.status == TaskStatus.COMPLETED:
+        # Not an error, but the task is already done. We can return it as is.
+        return task
+
+    task.status = TaskStatus.COMPLETED
+    task.completion_date = datetime.datetime.utcnow()
+
+    # Award points to the user
+    user = db_session.query(User).filter(User.id == user_id).first()
+    if user:
+        user.points += POINTS_PER_TASK
+    
+    try:
+        db_session.commit()
+        db_session.refresh(task)
+        return task
+    except SQLAlchemyError as e:
+        db_session.rollback()
+        raise TaskCompletionError(f"Database error occurred while completing task: {e}")
+
+def get_leaderboard_users(db_session: Session, limit: int = 10) -> List[User]:
+    """Retrieves users for the leaderboard, sorted by points."""
+    return db_session.query(User).order_by(User.points.desc()).limit(limit).all()

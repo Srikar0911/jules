@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <div class="contact-section">
+        <h2>Contact Us</h2>
+        <p>
+            Have questions, feedback, or just want to say hello? We'd love to hear from you.
+        </p>
+        <p>
+            You can reach out to us through the following channels:
+        </p>
+        <ul>
+            <li><strong>Email:</strong> <a href="mailto:support@taskgamify.com">support@taskgamify.com</a></li>
+            <li><strong>Project Repository:</strong> <a href="https://github.com/your-repo/task_gamification_app" target="_blank">GitHub Project</a></li>
+            <li><strong>Twitter:</strong> <a href="https://twitter.com/taskgamify" target="_blank">@TaskGamify</a></li>
+        </ul>
+        <p>
+            We'll do our best to get back to you as soon as possible.
+        </p>
+    </div>
+
+    <style>
+        .contact-section h2 { color: #333; }
+        .contact-section p { line-height: 1.6; margin-bottom: 1em; }
+        .contact-section ul { list-style-type: none; padding-left: 0; }
+        .contact-section ul li { margin-bottom: 0.5em; }
+        .contact-section a { color: #007bff; text-decoration: none; }
+        .contact-section a:hover { text-decoration: underline; }
+    </style>
+{% endblock %}

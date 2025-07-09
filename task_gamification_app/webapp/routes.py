@@ -4,16 +4,13 @@ from .forms import RegistrationForm, LoginForm
 
 # Adjust path to import service functions and custom exceptions
 # This assumes webapp is a sibling to app, or sys.path is managed correctly
-import sys
-import os
-# Add project root to sys.path to allow absolute imports like from app.services
-project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
-if project_root not in sys.path:
-    sys.path.insert(0, project_root)
-
+# NOTE: The 'sys.path' modification has been removed.
+# The web application should be run as a module from the project root, e.g.,
+# python -m task_gamification_app.run_web
 from task_gamification_app.app.services import (
     create_user as create_user_service,
     verify_user_login as verify_user_login_service,
+    get_leaderboard_users,
     UsernameExistsError,
     UserCreationError
 )
@@ -99,7 +96,24 @@ def logout():
 #     # ... fetch and display tasks ...
 #     return "Tasks Page (To be implemented)"
 
-# @app.route('/leaderboard')
-# def web_leaderboard():
-#     # ... fetch and display leaderboard ...
-#     return "Leaderboard Page (To be implemented)"
+@app.route('/leaderboard')
+def leaderboard():
+    db_session = None
+    try:
+        db_session = SessionLocal()
+        users = get_leaderboard_users(db_session=db_session, limit=20)
+        return render_template('leaderboard.html', title='Leaderboard', users=users)
+    except Exception as e:
+        flash(f'Could not load leaderboard: {e}', 'danger')
+        return redirect(url_for('index'))
+    finally:
+        if db_session:
+            db_session.close()
+
+@app.route('/about')
+def about():
+    return render_template('about.html', title='About')
+
+@app.route('/contact')
+def contact():
+    return render_template('contact.html', title='Contact')
