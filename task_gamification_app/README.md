@@ -1,6 +1,6 @@
-# Task Gamification App
+# QuestLog
 
-This application helps users manage their tasks with a gamification approach, encouraging productivity through points and friendly competition.
+QuestLog helps users manage their tasks with a gamification approach, encouraging productivity through points and friendly competition.
 
 It currently supports a web interface with the following features:
 
@@ -11,7 +11,7 @@ It currently supports a web interface with the following features:
     *   _Login Page_
 *   **Navigation**: A persistent navigation bar allows easy access to different parts of the application.
     *   **Home Page**: The main landing page.
-    *   **About Page**: Provides information about the TaskGamify application.
+    *   **About Page**: Provides information about the QuestLog application.
         *   `[Screenshot of About Page]`
     *   **Contact Page**: Offers ways to get in touch or provide feedback.
         *   `[Screenshot of Contact Page]`
