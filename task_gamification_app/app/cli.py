@@ -36,6 +36,11 @@ def register_user():
         print("Username cannot be empty.")
         return
 
+    email = input("Enter email: ").strip()
+    if not email:
+        print("Email cannot be empty.")
+        return
+
     password = getpass.getpass("Enter password: ")
     if not password:
         print("Password cannot be empty.")
@@ -47,7 +52,7 @@ def register_user():
 
     db = get_db_session()
     try:
-        new_user_obj = create_user_service(db_session=db, username=username, password=password)
+        new_user_obj = create_user_service(db_session=db, username=username, email=email, password=password)
         print(f"User '{new_user_obj.username}' registered successfully!")
     except UsernameExistsError:
         print(f"Username '{username}' already exists. Please choose a different one.")

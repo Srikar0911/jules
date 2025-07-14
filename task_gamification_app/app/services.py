@@ -27,7 +27,7 @@ class TaskCompletionError(ServiceError):
     """Raised for errors during task completion."""
     pass
 
-def create_user(db_session: Session, username: str, password: str) -> User:
+def create_user(db_session: Session, username: str, email: str, password: str) -> User:
     """
     Creates a new user, hashes their password, and saves them to the database.
     Returns the User object if successful.
@@ -38,7 +38,11 @@ def create_user(db_session: Session, username: str, password: str) -> User:
     if existing_user:
         raise UsernameExistsError(f"Username '{username}' already exists.")
 
-    new_user = User(username=username)
+    existing_email = db_session.query(User).filter(User.email == email).first()
+    if existing_email:
+        raise UserCreationError(f"Email '{email}' already exists.")
+
+    new_user = User(username=username, email=email)
     new_user.set_password(password)
     db_session.add(new_user)
     try:
@@ -72,9 +76,9 @@ def get_user_by_id(db_session: Session, user_id: int) -> Optional[User]:
     """
     return db_session.query(User).filter(User.id == user_id).first()
 
-def update_user(db_session: Session, user_id: int, username: Optional[str] = None) -> User:
+def update_user(db_session: Session, user_id: int, username: Optional[str] = None, email: Optional[str] = None) -> User:
     """
-    Updates a user's details, such as username.
+    Updates a user's details, such as username and email.
     Raises UsernameExistsError if the new username is already taken.
     Raises ServiceError for other issues.
     """
@@ -89,6 +93,12 @@ def update_user(db_session: Session, user_id: int, username: Optional[str] = Non
         if existing_user:
             raise UsernameExistsError(f"Username '{username}' is already taken.")
         user.username = username
+
+    if email is not None and email != user.email:
+        existing_email = db_session.query(User).filter(User.email == email).first()
+        if existing_email:
+            raise UserCreationError(f"Email '{email}' is already taken.")
+        user.email = email
 
     try:
         db_session.commit()
