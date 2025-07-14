@@ -21,17 +21,23 @@
     <div class="card mb-4">
         <div class="card-header">Filter Tasks</div>
         <div class="card-body">
-            {# This form uses GET to change the URL with query parameters #}
-            {{ bform.render_form(filter_form, action=url_for('my_tasks'), method='get', button_map={'submit': 'secondary'}) }}
+            <form method="GET" action="{{ url_for('my_tasks') }}" class="form">
+                <div class="row">
+                    <div class="col-md-6">{{ bform.render_field(filter_form.description) }}</div>
+                    <div class="col-md-6">{{ bform.render_field(filter_form.status) }}</div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4">{{ bform.render_field(filter_form.creation_date) }}</div>
+                    <div class="col-md-4">{{ bform.render_field(filter_form.due_date) }}</div>
+                    <div class="col-md-4">{{ bform.render_field(filter_form.completion_date) }}</div>
+                </div>
+                {{ bform.render_field(filter_form.submit, button_map={'submit': 'secondary'}) }}
+            </form>
         </div>
     </div>
 
     {# Task List #}
-    <h3>
-        {% if current_filter_status_str == 'PENDING' %}Pending Tasks
-        {% elif current_filter_status_str == 'COMPLETED' %}Completed Tasks
-        {% else %}All Tasks{% endif %}
-    </h3>
+    <h3>Filtered Tasks</h3>
     <ul class="list-group">
         {% for task in tasks %}
             <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
