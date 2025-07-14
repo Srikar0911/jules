@@ -120,17 +120,11 @@ def my_tasks():
     db_session = SessionLocal()
 
     create_form = CreateTaskForm()
-    filter_form = FilterTasksForm(request.args) # Populate with query params for GET requests
+    filter_form = FilterTasksForm(request.args, meta={'csrf': False})
 
     tasks = []
-    current_filter_status_str = request.args.get('status', '').upper()
-    current_filter_status = None
-    if current_filter_status_str == 'PENDING':
-        current_filter_status = TaskStatus.PENDING
-    elif current_filter_status_str == 'COMPLETED':
-        current_filter_status = TaskStatus.COMPLETED
 
-    # Handle task creation
+    # Handle task creation POST request
     if create_form.validate_on_submit() and 'create_submit' in request.form:
         try:
             create_task_service(
@@ -140,30 +134,51 @@ def my_tasks():
                 due_date=create_form.due_date.data
             )
             flash('Task created successfully!', 'success')
-            return redirect(url_for('my_tasks', status=current_filter_status_str)) # Preserve filter
+            # Preserve filters in redirect
+            return redirect(url_for('my_tasks', **request.args))
         except TaskServiceError as e:
             flash(f'Error creating task: {e}', 'danger')
         except Exception as e:
             flash(f'An unexpected error occurred: {e}', 'danger')
 
+    # Filtering logic for GET request
+    filters = {
+        'description': filter_form.description.data,
+        'status': filter_form.status.data,
+        'creation_date': filter_form.creation_date.data,
+        'due_date': filter_form.due_date.data,
+        'completion_date': filter_form.completion_date.data
+    }
+
+    # Convert status from form string to TaskStatus enum if necessary
+    status_filter = None
+    if filters['status'] == 'Pending':
+        status_filter = TaskStatus.PENDING
+    elif filters['status'] == 'Completed':
+        status_filter = TaskStatus.COMPLETED
+
+    # Update filters dict with the enum value
+    filters['status'] = status_filter
+
+
     try:
-        tasks = get_tasks_service(db_session=db_session, user_id=user_id, status=current_filter_status, sort_by="due_date")
+        tasks = get_tasks_service(
+            db_session=db_session,
+            user_id=user_id,
+            sort_by="due_date",
+            **filters
+        )
     except Exception as e:
         flash(f'Error fetching tasks: {e}', 'danger')
 
-    db_session.close() # Close session after use for GET or after POST handling if not redirected
-
-    # For rendering, ensure the filter form reflects the current filter
-    if not filter_form.status.data : filter_form.status.data = current_filter_status_str if current_filter_status_str else ""
-
+    db_session.close()
 
     return render_template('my_tasks.html',
                            title='My Tasks',
                            create_form=create_form,
                            filter_form=filter_form,
                            tasks=tasks,
-                           TaskStatus=TaskStatus, # Pass TaskStatus enum to template for comparisons
-                           current_filter_status_str=current_filter_status_str)
+                           TaskStatus=TaskStatus)
 
 @app.route('/task/<int:task_id>/update', methods=['GET', 'POST'])
 @login_required

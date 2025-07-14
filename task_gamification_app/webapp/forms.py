@@ -68,11 +68,12 @@ class EditUserForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired(), Length(min=2, max=20)])
     submit = SubmitField('Update')
 
+from wtforms import SelectField
+
 class FilterTasksForm(FlaskForm):
-    status = StringField('Status Filter', validators=[Optional()]) # User might type 'pending', 'completed', or clear it for 'all'
-    # Alternatively, use SelectField if TaskStatus enum is easily available here
-    # from ..app.models import TaskStatus
-    # status = SelectField('Filter by Status',
-    #                      choices=[('', 'All'), ('PENDING', 'Pending'), ('COMPLETED', 'Completed')],
-    #                      validators=[Optional()])
+    description = StringField('Description', validators=[Optional()])
+    status = SelectField('Status', choices=[('All', 'All'), ('Pending', 'Pending'), ('Completed', 'Completed')], validators=[Optional()])
+    creation_date = DateField('Creation date', validators=[Optional()], format='%Y-%m-%d')
+    due_date = DateField('Due date', validators=[Optional()], format='%Y-%m-%d')
+    completion_date = DateField('Completion date', validators=[Optional()], format='%Y-%m-%d')
     submit = SubmitField('Filter')
