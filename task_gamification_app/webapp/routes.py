@@ -1,6 +1,6 @@
 from flask import render_template, url_for, flash, redirect, request, session
 from . import app  # Import the app instance from webapp/__init__.py
-from .forms import RegistrationForm, LoginForm, EditUserForm
+from .forms import RegistrationForm, LoginForm, EditUserForm, AddEmailForm
 
 # Adjust path to import service functions and custom exceptions
 # This assumes webapp is a sibling to app, or sys.path is managed correctly
@@ -59,6 +59,7 @@ def register():
             new_user = create_user_service(
                 db_session=db_session,
                 username=form.username.data,
+                email=form.email.data,
                 password=form.password.data
             )
             flash(f'Account created for {form.username.data}! You can now log in.', 'success')
@@ -90,6 +91,9 @@ def login():
                 password=form.password.data
             )
             if user:
+                if not user.email:
+                    flash('Please add your email address to continue.', 'warning')
+                    return redirect(url_for('add_email', user_id=user.id))
                 session['user_id'] = user.id
                 session['username'] = user.username
                 flash('You have been logged in!', 'success')
@@ -322,3 +326,25 @@ def edit_user():
 @app.route('/contact')
 def contact():
     return render_template('contact.html', title='Contact')
+
+@app.route('/add_email/<int:user_id>', methods=['GET', 'POST'])
+def add_email(user_id):
+    form = AddEmailForm()
+    if form.validate_on_submit():
+        db_session = SessionLocal()
+        try:
+            user = get_user_by_id_service(db_session, user_id)
+            if user:
+                update_user_service(db_session, user_id, email=form.email.data)
+                flash('Email address added successfully.', 'success')
+                # Log the user in
+                session['user_id'] = user.id
+                session['username'] = user.username
+                return redirect(url_for('index'))
+            else:
+                flash('User not found.', 'danger')
+        except Exception as e:
+            flash(f'An error occurred: {e}', 'danger')
+        finally:
+            db_session.close()
+    return render_template('add_email.html', title='Add Email', form=form, user_id=user_id)

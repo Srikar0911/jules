@@ -35,16 +35,17 @@ class TestUserServices(unittest.TestCase):
 
     def test_create_user_success(self):
         """Test successful user creation."""
-        user = create_user(self.session, "testuser", "password123")
+        user = create_user(self.session, "testuser", "test@example.com", "password123")
         self.assertIsNotNone(user)
         self.assertEqual(user.username, "testuser")
+        self.assertEqual(user.email, "test@example.com")
         self.assertTrue(user.check_password("password123"))
 
     def test_create_user_duplicate_username(self):
         """Test that creating a user with a duplicate username raises an error."""
-        create_user(self.session, "testuser", "password123")
+        create_user(self.session, "testuser", "test@example.com", "password123")
         with self.assertRaises(UsernameExistsError):
-            create_user(self.session, "testuser", "anotherpassword")
+            create_user(self.session, "testuser", "test2@example.com", "anotherpassword")
 
 
 class TestTaskServices(unittest.TestCase):
@@ -55,7 +56,7 @@ class TestTaskServices(unittest.TestCase):
         Base.metadata.create_all(self.engine)
         Session = sessionmaker(bind=self.engine)
         self.session = Session()
-        self.user = create_user(self.session, "testuser", "password123")
+        self.user = create_user(self.session, "testuser", "test@example.com", "password123")
 
     def tearDown(self):
         """Clean up the database after each test."""
