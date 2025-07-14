@@ -121,19 +121,37 @@ def delete_task_for_user(db_session: Session, task_id: int, user_id: int) -> boo
         db_session.rollback()
         raise ServiceError(f"Database error occurred while deleting task: {e}")
 
-def get_tasks_for_user(db_session: Session, user_id: int, status: Optional[TaskStatus] = None, sort_by: str = "creation_date") -> List[Task]:
+def get_tasks_for_user(
+    db_session: Session,
+    user_id: int,
+    status: Optional[TaskStatus] = None,
+    sort_by: str = "creation_date",
+    description: Optional[str] = None,
+    creation_date: Optional[datetime.date] = None,
+    due_date: Optional[datetime.date] = None,
+    completion_date: Optional[datetime.date] = None
+) -> List[Task]:
     """
-    Retrieves tasks for a given user, optionally filtered by status and sorted.
-    `sort_by` can be 'creation_date' or 'due_date'.
+    Retrieves tasks for a given user, with extensive filtering and sorting.
     """
     query = db_session.query(Task).filter(Task.user_id == user_id)
 
+    # Apply filters
+    if description:
+        query = query.filter(Task.description.ilike(f'%{description}%'))
     if status:
         query = query.filter(Task.status == status)
+    if creation_date:
+        query = query.filter(func.date(Task.creation_date) == creation_date)
+    if due_date:
+        query = query.filter(func.date(Task.due_date) == due_date)
+    if completion_date:
+        query = query.filter(func.date(Task.completion_date) == completion_date)
 
+    # Apply sorting
     if sort_by == "due_date":
-        query = query.order_by(Task.due_date.asc().nullslast(), Task.creation_date.desc()) # Sort by due_date, then by creation_date for ties or null due_dates
-    else: # Default sort by creation_date
+        query = query.order_by(Task.due_date.asc().nullslast(), Task.creation_date.desc())
+    else:  # Default sort by creation_date
         query = query.order_by(Task.creation_date.desc())
 
     return query.all()
