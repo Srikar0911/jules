@@ -64,6 +64,10 @@ class UpdateTaskForm(TaskForm):
     # `delete` can be used on this form
     pass # Uses all fields from TaskForm, submit label is fine.
 
+class EditUserForm(FlaskForm):
+    username = StringField('Username', validators=[DataRequired(), Length(min=2, max=20)])
+    submit = SubmitField('Update')
+
 class FilterTasksForm(FlaskForm):
     status = StringField('Status Filter', validators=[Optional()]) # User might type 'pending', 'completed', or clear it for 'all'
     # Alternatively, use SelectField if TaskStatus enum is easily available here
