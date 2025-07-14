@@ -8,6 +8,7 @@ app = Flask(__name__)
 # Configuration
 # In a real application, this should be set via environment variables or a config file
 app.config['SECRET_KEY'] = os.environ.get('FLASK_SECRET_KEY', 'a_very_secret_default_key_for_dev')
+app.config['SECURITY_PASSWORD_SALT'] = os.environ.get('FLASK_SECURITY_PASSWORD_SALT', 'a_very_secret_salt_for_dev')
 
 # Initialize Bootstrap-Flask
 # Bootstrap-Flask typically uses Bootstrap 4 by default with Bootstrap4 class,

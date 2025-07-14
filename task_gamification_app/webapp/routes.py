@@ -1,6 +1,6 @@
 from flask import render_template, url_for, flash, redirect, request, session
 from . import app  # Import the app instance from webapp/__init__.py
-from .forms import RegistrationForm, LoginForm, EditUserForm, AddEmailForm
+from .forms import RegistrationForm, LoginForm, EditUserForm, AddEmailForm, ForgotPasswordForm, ResetPasswordForm
 
 # Adjust path to import service functions and custom exceptions
 # This assumes webapp is a sibling to app, or sys.path is managed correctly
@@ -12,6 +12,9 @@ from task_gamification_app.app.services import (
     verify_user_login as verify_user_login_service,
     get_user_by_id as get_user_by_id_service,
     update_user as update_user_service,
+    send_password_reset_email as send_password_reset_email_service,
+    verify_password_reset_token as verify_password_reset_token_service,
+    reset_password as reset_password_service,
     # get_leaderboard_users, # Old one, replaced by paginated version
     get_leaderboard_users_paginated, # New paginated version
     UsernameExistsError,
@@ -115,6 +118,44 @@ def logout():
     session.pop('username', None)
     flash('You have been logged out.', 'info')
     return redirect(url_for('index'))
+
+@app.route('/forgot_password', methods=['GET', 'POST'])
+def forgot_password():
+    form = ForgotPasswordForm()
+    if form.validate_on_submit():
+        db_session = SessionLocal()
+        try:
+            user = db_session.query(User).filter_by(email=form.email.data).first()
+            if user:
+                send_password_reset_email_service(user)
+            flash('A password reset link has been sent to your email.', 'info')
+            return redirect(url_for('login'))
+        except Exception as e:
+            flash(f'An unexpected error occurred: {e}', 'danger')
+        finally:
+            if db_session:
+                db_session.close()
+    return render_template('forgot_password.html', title='Forgot Password', form=form)
+
+@app.route('/reset_password/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    user_id = verify_password_reset_token_service(token)
+    if not user_id:
+        flash('That is an invalid or expired token', 'warning')
+        return redirect(url_for('forgot_password'))
+    form = ResetPasswordForm()
+    if form.validate_on_submit():
+        db_session = SessionLocal()
+        try:
+            reset_password_service(db_session, user_id, form.password.data)
+            flash('Your password has been reset! You are now able to log in', 'success')
+            return redirect(url_for('login'))
+        except Exception as e:
+            flash(f'An unexpected error occurred: {e}', 'danger')
+        finally:
+            if db_session:
+                db_session.close()
+    return render_template('reset_password.html', title='Reset Password', form=form, token=token)
 
 # --- My Tasks Page ---
 @app.route('/my_tasks', methods=['GET', 'POST'])

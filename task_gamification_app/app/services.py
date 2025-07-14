@@ -3,6 +3,8 @@ from sqlalchemy.exc import SQLAlchemyError
 from typing import Union, List, Optional
 import datetime
 from .models import User, Task, TaskStatus
+from itsdangerous import URLSafeTimedSerializer
+from flask import current_app
 
 # Constants
 POINTS_PER_TASK = 10 # Define points for completing a task
@@ -293,8 +295,45 @@ def get_leaderboard_users_paginated(db_session: Session, page: int = 1, per_page
 
     return leaderboard_entries, total_users_count
 
-# Deprecate or remove the old get_leaderboard_users if this new one is preferred.
+# Deprecate or remove the old get_leaderbsoard_users if this new one is preferred.
 # For now, I'll leave it and the route will call the new one.
 # def get_leaderboard_users(db_session: Session, limit: int = 10) -> List[User]:
 #     """Retrieves users for the leaderboard, sorted by points."""
 #     return db_session.query(User).order_by(User.points.desc()).limit(limit).all()
+
+def get_password_reset_token(user_id: int) -> str:
+    """Generates a password reset token for a user."""
+    serializer = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
+    return serializer.dumps(user_id, salt=current_app.config['SECURITY_PASSWORD_SALT'])
+
+def verify_password_reset_token(token: str) -> Optional[int]:
+    """Verifies a password reset token and returns the user ID if valid."""
+    serializer = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
+    try:
+        user_id = serializer.loads(
+            token,
+            salt=current_app.config['SECURITY_PASSWORD_SALT'],
+            max_age=3600  # Token valid for 1 hour
+        )
+    except Exception:
+        return None
+    return user_id
+
+def send_password_reset_email(user: User):
+    """Sends a password reset email to the user."""
+    token = get_password_reset_token(user.id)
+    # In a real application, you would use a library like Flask-Mail to send the email
+    print(f"Password reset link: http://localhost:5000/reset_password/{token}")
+
+def reset_password(db_session: Session, user_id: int, password: str) -> bool:
+    """Resets the user's password."""
+    user = db_session.query(User).filter(User.id == user_id).first()
+    if not user:
+        return False
+    user.set_password(password)
+    try:
+        db_session.commit()
+        return True
+    except SQLAlchemyError as e:
+        db_session.rollback()
+        raise ServiceError(f"Database error occurred while resetting password: {e}")
