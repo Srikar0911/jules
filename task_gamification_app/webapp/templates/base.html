@@ -40,11 +40,15 @@
                 </ul>
                 <ul class="navbar-nav">
                     {% if session.user_id %}
-                        <li class="nav-item">
-                            <span class="navbar-text">Hi, {{ session.username }}!</span>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                Hi, {{ session.username }}!
+                            </a>
+                            <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                                <a class="dropdown-item" href="{{ url_for('edit_user') }}">Edit User Details</a>
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item" href="{{ url_for('logout') }}">Log Out</a>
+                            </div>
                         </li>
                     {% else %}
                         <li class="nav-item">
@@ -72,7 +76,7 @@
             {% endif %}
         {% endwith %}
 
-        {% block page_content %}{% endblock %} {# Renamed from content to page_content to match other templates #}
+        {% block page_content %}{% endblock %}
     </main>
 
     <footer class="container mt-4 pt-4 my-md-5 pt-md-5 border-top">

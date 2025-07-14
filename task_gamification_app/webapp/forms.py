@@ -64,6 +64,10 @@ class UpdateTaskForm(TaskForm):
     # `delete` can be used on this form
     pass # Uses all fields from TaskForm, submit label is fine.
 
+class EditUserForm(FlaskForm):
+    username = StringField('Username', validators=[DataRequired(), Length(min=2, max=20)])
+    submit = SubmitField('Update')
+
 from wtforms import SelectField
 
 class FilterTasksForm(FlaskForm):

@@ -1,6 +1,6 @@
 from flask import render_template, url_for, flash, redirect, request, session
 from . import app  # Import the app instance from webapp/__init__.py
-from .forms import RegistrationForm, LoginForm
+from .forms import RegistrationForm, LoginForm, EditUserForm
 
 # Adjust path to import service functions and custom exceptions
 # This assumes webapp is a sibling to app, or sys.path is managed correctly
@@ -10,6 +10,8 @@ from .forms import RegistrationForm, LoginForm
 from task_gamification_app.app.services import (
     create_user as create_user_service,
     verify_user_login as verify_user_login_service,
+    get_user_by_id as get_user_by_id_service,
+    update_user as update_user_service,
     # get_leaderboard_users, # Old one, replaced by paginated version
     get_leaderboard_users_paginated, # New paginated version
     UsernameExistsError,
@@ -290,6 +292,32 @@ def leaderboard():
 @app.route('/about')
 def about():
     return render_template('about.html', title='About')
+
+@app.route('/edit_user', methods=['GET', 'POST'])
+@login_required
+def edit_user():
+    user_id = session['user_id']
+    db_session = SessionLocal()
+    user = get_user_by_id_service(db_session, user_id)
+    form = EditUserForm(obj=user)
+
+    if form.validate_on_submit():
+        try:
+            updated_user = update_user_service(
+                db_session=db_session,
+                user_id=user_id,
+                username=form.username.data
+            )
+            session['username'] = updated_user.username
+            flash('Your details have been updated.', 'success')
+            return redirect(url_for('edit_user'))
+        except UsernameExistsError:
+            flash('That username is already taken. Please choose a different one.', 'danger')
+        except Exception as e:
+            flash(f'An error occurred: {e}', 'danger')
+
+    db_session.close()
+    return render_template('edit_user.html', title='Edit User', form=form)
 
 @app.route('/contact')
 def contact():
