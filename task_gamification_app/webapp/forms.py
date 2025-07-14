@@ -10,6 +10,8 @@ from ..app.models import User
 from ..app.db import SessionLocal
 
 class RegistrationForm(FlaskForm):
+    first_name = StringField('First Name', validators=[DataRequired(), Length(min=2, max=50)])
+    last_name = StringField('Last Name', validators=[DataRequired(), Length(min=2, max=50)])
     username = StringField('Username',
                            validators=[DataRequired(), Length(min=2, max=20)])
     email = StringField('Email',
@@ -76,9 +78,16 @@ class UpdateTaskForm(TaskForm):
     pass # Uses all fields from TaskForm, submit label is fine.
 
 class EditUserForm(FlaskForm):
-    username = StringField('Username', validators=[DataRequired(), Length(min=2, max=20)])
+    first_name = StringField('First Name', validators=[DataRequired(), Length(min=2, max=50)])
+    last_name = StringField('Last Name', validators=[DataRequired(), Length(min=2, max=50)])
+    username = StringField('Username', validators=[DataRequired(), Length(min=2, max=20)], render_kw={'readonly': True})
     email = StringField('Email', validators=[DataRequired(), Email()])
     submit = SubmitField('Update')
+
+class AddNameForm(FlaskForm):
+    first_name = StringField('First Name', validators=[DataRequired(), Length(min=2, max=50)])
+    last_name = StringField('Last Name', validators=[DataRequired(), Length(min=2, max=50)])
+    submit = SubmitField('Submit')
 
 class AddEmailForm(FlaskForm):
     email = StringField('Email', validators=[DataRequired(), Email()])

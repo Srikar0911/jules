@@ -1,6 +1,6 @@
 from flask import render_template, url_for, flash, redirect, request, session
 from . import app  # Import the app instance from webapp/__init__.py
-from .forms import RegistrationForm, LoginForm, EditUserForm, AddEmailForm, ForgotPasswordForm, ResetPasswordForm
+from .forms import RegistrationForm, LoginForm, EditUserForm, AddEmailForm, AddNameForm, ForgotPasswordForm, ResetPasswordForm
 
 # Adjust path to import service functions and custom exceptions
 # This assumes webapp is a sibling to app, or sys.path is managed correctly
@@ -61,6 +61,8 @@ def register():
             db_session = SessionLocal()
             new_user = create_user_service(
                 db_session=db_session,
+                first_name=form.first_name.data,
+                last_name=form.last_name.data,
                 username=form.username.data,
                 email=form.email.data,
                 password=form.password.data
@@ -94,6 +96,10 @@ def login():
                 password=form.password.data
             )
             if user:
+                if not user.first_name or not user.last_name:
+                    flash('Please add your first and last name to continue.', 'warning')
+                    session['user_id_temp'] = user.id
+                    return redirect(url_for('add_name'))
                 if not user.email:
                     flash('Please add your email address to continue.', 'warning')
                     return redirect(url_for('add_email', user_id=user.id))
@@ -111,6 +117,34 @@ def login():
             if db_session:
                 db_session.close()
     return render_template('login.html', title='Login', form=form)
+
+@app.route('/add_name', methods=['GET', 'POST'])
+def add_name():
+    if 'user_id_temp' not in session:
+        return redirect(url_for('login'))
+
+    form = AddNameForm()
+    if form.validate_on_submit():
+        db_session = SessionLocal()
+        try:
+            user_id = session['user_id_temp']
+            update_user_service(
+                db_session=db_session,
+                user_id=user_id,
+                first_name=form.first_name.data,
+                last_name=form.last_name.data
+            )
+            flash('Thank you for providing your name.', 'success')
+            user = get_user_by_id_service(db_session, user_id)
+            session.pop('user_id_temp', None)
+            session['user_id'] = user.id
+            session['username'] = user.username
+            return redirect(url_for('index'))
+        except Exception as e:
+            flash(f'An error occurred: {e}', 'danger')
+        finally:
+            db_session.close()
+    return render_template('add_name.html', title='Add Name', form=form)
 
 @app.route('/logout')
 def logout():
@@ -351,7 +385,8 @@ def edit_user():
             updated_user = update_user_service(
                 db_session=db_session,
                 user_id=user_id,
-                username=form.username.data,
+                first_name=form.first_name.data,
+                last_name=form.last_name.data,
                 email=form.email.data
             )
             session['username'] = updated_user.username

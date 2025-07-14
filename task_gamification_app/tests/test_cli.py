@@ -36,7 +36,7 @@ class TestCliFunctions(unittest.TestCase):
     @patch('builtins.input')
     def test_register_user_success(self, mock_input, mock_getpass):
         """Test successful user registration."""
-        mock_input.side_effect = ["testuser_reg", "test@example.com", "testpass123", "testpass123"]
+        mock_input.side_effect = ["test_first", "test_last", "testuser_reg", "test@example.com", "testpass123", "testpass123"]
         mock_getpass.return_value = "testpass123"
 
         # Suppress print output during test
@@ -54,12 +54,12 @@ class TestCliFunctions(unittest.TestCase):
     def test_register_user_username_exists(self, mock_input, mock_getpass):
         """Test registration when username already exists."""
         # First, create a user
-        existing_user = User(username="existinguser", email="test@example.com")
+        existing_user = User(first_name="test", last_name="test", username="existinguser", email="test@example.com")
         existing_user.set_password("oldpass")
         self.db.add(existing_user)
         self.db.commit()
 
-        mock_input.side_effect = ["existinguser", "new@example.com", "newpass123", "newpass123"] # Attempt to register same username
+        mock_input.side_effect = ["test_first", "test_last", "existinguser", "new@example.com", "newpass123", "newpass123"] # Attempt to register same username
         mock_getpass.return_value = "newpass123"
 
         with patch('builtins.print') as mock_print:
@@ -90,7 +90,7 @@ class TestCliFunctions(unittest.TestCase):
     def test_login_user_success(self, mock_input, mock_getpass):
         """Test successful user login."""
         # Setup: Create a user to log in with
-        user = User(username="loginuser", email="test@example.com")
+        user = User(first_name="test", last_name="test", username="loginuser", email="test@example.com")
         user.set_password("loginpass")
         self.db.add(user)
         self.db.commit()
@@ -110,7 +110,7 @@ class TestCliFunctions(unittest.TestCase):
     def test_login_user_failure_wrong_password(self, mock_input, mock_getpass):
         """Test login failure with wrong password."""
         # Setup: Create a user
-        user = User(username="loginuser2", email="test@example.com")
+        user = User(first_name="test", last_name="test", username="loginuser2", email="test@example.com")
         user.set_password("correctpass")
         self.db.add(user)
         self.db.commit()
@@ -161,7 +161,7 @@ class TestCliFunctions(unittest.TestCase):
     def test_create_task_cli_success(self, mock_input):
         """Test successful task creation by a logged-in user."""
         # Setup: Create a user
-        user = User(username="taskuser", email="test@example.com")
+        user = User(first_name="test", last_name="test", username="taskuser", email="test@example.com")
         user.set_password("taskpass")
         self.db.add(user)
         self.db.commit()
@@ -197,7 +197,7 @@ class TestCliFunctions(unittest.TestCase):
     @patch('builtins.input')
     def test_complete_task_cli_success(self, mock_input):
         """Test successful task completion."""
-        user = User(username="taskcompleter", email="test@example.com", points=0)
+        user = User(first_name="test", last_name="test", username="taskcompleter", email="test@example.com", points=0)
         user.set_password("completerpass")
         self.db.add(user)
         self.db.commit()
@@ -236,7 +236,7 @@ class TestCliFunctions(unittest.TestCase):
         CURRENT_USER_ID = None
 
         # Setup a task (though it shouldn't be completable)
-        user = User(username="dummyowner", email="test@example.com")
+        user = User(first_name="test", last_name="test", username="dummyowner", email="test@example.com")
         user.set_password("dummypass")
         self.db.add(user)
         self.db.commit()

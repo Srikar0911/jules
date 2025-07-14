@@ -31,6 +31,16 @@ def get_db_session() -> Session:
 def register_user():
     """Handles new user registration using the user service."""
     print("\n--- Register New User ---")
+    first_name = input("Enter first name: ").strip()
+    if not first_name:
+        print("First name cannot be empty.")
+        return
+
+    last_name = input("Enter last name: ").strip()
+    if not last_name:
+        print("Last name cannot be empty.")
+        return
+
     username = input("Enter username: ").strip()
     if not username:
         print("Username cannot be empty.")
@@ -52,7 +62,7 @@ def register_user():
 
     db = get_db_session()
     try:
-        new_user_obj = create_user_service(db_session=db, username=username, email=email, password=password)
+        new_user_obj = create_user_service(db_session=db, first_name=first_name, last_name=last_name, username=username, email=email, password=password)
         print(f"User '{new_user_obj.username}' registered successfully!")
     except UsernameExistsError:
         print(f"Username '{username}' already exists. Please choose a different one.")
