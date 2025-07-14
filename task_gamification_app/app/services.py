@@ -29,7 +29,7 @@ class TaskCompletionError(ServiceError):
     """Raised for errors during task completion."""
     pass
 
-def create_user(db_session: Session, username: str, email: str, password: str) -> User:
+def create_user(db_session: Session, first_name: str, last_name: str, username: str, email: str, password: str) -> User:
     """
     Creates a new user, hashes their password, and saves them to the database.
     Returns the User object if successful.
@@ -44,7 +44,7 @@ def create_user(db_session: Session, username: str, email: str, password: str) -
     if existing_email:
         raise UserCreationError(f"Email '{email}' already exists.")
 
-    new_user = User(username=username, email=email)
+    new_user = User(first_name=first_name, last_name=last_name, username=username, email=email)
     new_user.set_password(password)
     db_session.add(new_user)
     try:
@@ -78,7 +78,7 @@ def get_user_by_id(db_session: Session, user_id: int) -> Optional[User]:
     """
     return db_session.query(User).filter(User.id == user_id).first()
 
-def update_user(db_session: Session, user_id: int, username: Optional[str] = None, email: Optional[str] = None) -> User:
+def update_user(db_session: Session, user_id: int, first_name: Optional[str] = None, last_name: Optional[str] = None, username: Optional[str] = None, email: Optional[str] = None) -> User:
     """
     Updates a user's details, such as username and email.
     Raises UsernameExistsError if the new username is already taken.
@@ -89,6 +89,12 @@ def update_user(db_session: Session, user_id: int, username: Optional[str] = Non
         # This case should ideally not be hit if called from a logged-in session,
         # but it's good practice to handle it.
         raise ServiceError(f"User with ID {user_id} not found.")
+
+    if first_name is not None:
+        user.first_name = first_name
+
+    if last_name is not None:
+        user.last_name = last_name
 
     if username is not None and username != user.username:
         existing_user = db_session.query(User).filter(User.username == username).first()

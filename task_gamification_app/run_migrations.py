@@ -15,6 +15,13 @@ def get_migration_files():
 def run_migrations():
     """Runs all pending migrations."""
     engine = create_engine(DATABASE_URL)
+
+    # Add this import
+    from app.models import Base
+
+    # Create tables
+    Base.metadata.create_all(bind=engine)
+
     conn = engine.connect()
     ctx = MigrationContext.configure(conn)
     op = Operations(ctx)
@@ -37,7 +44,8 @@ def run_migrations():
         alembic_version.create(engine)
 
     with engine.connect() as connection:
-        result = connection.execute("SELECT version_num FROM alembic_version")
+        from sqlalchemy import text
+        result = connection.execute(text("SELECT version_num FROM alembic_version"))
         ran_migrations = {row[0] for row in result}
 
     for migration_file in migration_files:
@@ -49,7 +57,8 @@ def run_migrations():
             spec.loader.exec_module(module)
             module.upgrade(op)
             with engine.connect() as connection:
-                connection.execute(f"INSERT INTO alembic_version (version_num) VALUES ('{migration_name}')")
+                from sqlalchemy import text
+                connection.execute(text(f"INSERT INTO alembic_version (version_num) VALUES ('{migration_name}')"))
             print(f"Migration {migration_name} complete.")
 
 if __name__ == "__main__":

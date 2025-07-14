@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% import "bootstrap/form.html" as bform %}
+
+{% block page_content %}
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <h2>Add Your Name</h2>
+            <p>Please provide your first and last name to continue.</p>
+            {{ bform.render_form(form, action=url_for('add_name'), button_map={'submit': 'primary'}) }}
+        </div>
+    </div>
+{% endblock %}

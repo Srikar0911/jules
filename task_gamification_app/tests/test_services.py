@@ -69,7 +69,7 @@ class BaseServiceTest(unittest.TestCase):
 class TestUserServices(BaseServiceTest):
     def test_create_user_success(self):
         """Test successful user creation."""
-        user = create_user(self.session, "testuser", "test@example.com", "password123")
+        user = create_user(self.session, "test_first", "test_last", "testuser", "test@example.com", "password123")
         self.assertIsNotNone(user)
         self.assertEqual(user.username, "testuser")
         self.assertEqual(user.email, "test@example.com")
@@ -77,15 +77,15 @@ class TestUserServices(BaseServiceTest):
 
     def test_create_user_duplicate_username(self):
         """Test that creating a user with a duplicate username raises an error."""
-        create_user(self.session, "testuser", "test@example.com", "password123")
+        create_user(self.session, "test_first", "test_last", "testuser", "test@example.com", "password123")
         with self.assertRaises(UsernameExistsError):
-            create_user(self.session, "testuser", "test2@example.com", "anotherpassword")
+            create_user(self.session, "test_first", "test_last", "testuser", "test2@example.com", "anotherpassword")
 
     def test_create_user_duplicate_email(self):
         """Test that creating a user with a duplicate email raises an error."""
-        create_user(self.session, "testuser1", "test@example.com", "password123")
+        create_user(self.session, "test_first", "test_last", "testuser1", "test@example.com", "password123")
         with self.assertRaises(UserCreationError): # The service raises UserCreationError for duplicate email
-            create_user(self.session, "testuser2", "test@example.com", "anotherpassword")
+            create_user(self.session, "test_first", "test_last", "testuser2", "test@example.com", "anotherpassword")
 
 
 class TestTaskServices(BaseServiceTest):
@@ -94,7 +94,7 @@ class TestTaskServices(BaseServiceTest):
         Extend the base setUp to create a user for task-related tests.
         """
         super().setUp() # This sets up the connection, transaction, and session
-        self.user = create_user(self.session, "testuser", "test@example.com", "password123")
+        self.user = create_user(self.session, "test_first", "test_last", "testuser", "test@example.com", "password123")
         # The user created here will be rolled back after the test.
 
     def test_filter_tasks(self):
