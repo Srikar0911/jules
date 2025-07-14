@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
-from typing import Union, List # Import Union and List
+from typing import Union, List, Optional
 import datetime
 from .models import User, Task, TaskStatus
 
@@ -65,9 +65,40 @@ def verify_user_login(db_session: Session, username: str, password: str) -> Unio
         return user
     return None
 
-from typing import Optional
+def get_user_by_id(db_session: Session, user_id: int) -> Optional[User]:
+    """
+    Retrieves a user by their ID.
+    Returns the User object if found, None otherwise.
+    """
+    return db_session.query(User).filter(User.id == user_id).first()
 
-def create_task_for_user(db_session: Session, user_id: int, description: str, due_date: Optional[datetime.datetime] = None) -> Task:
+def update_user(db_session: Session, user_id: int, username: Optional[str] = None) -> User:
+    """
+    Updates a user's details, such as username.
+    Raises UsernameExistsError if the new username is already taken.
+    Raises ServiceError for other issues.
+    """
+    user = db_session.query(User).filter(User.id == user_id).first()
+    if not user:
+        # This case should ideally not be hit if called from a logged-in session,
+        # but it's good practice to handle it.
+        raise ServiceError(f"User with ID {user_id} not found.")
+
+    if username is not None and username != user.username:
+        existing_user = db_session.query(User).filter(User.username == username).first()
+        if existing_user:
+            raise UsernameExistsError(f"Username '{username}' is already taken.")
+        user.username = username
+
+    try:
+        db_session.commit()
+        db_session.refresh(user)
+        return user
+    except SQLAlchemyError as e:
+        db_session.rollback()
+        raise ServiceError(f"Database error occurred while updating user: {e}")
+
+def create_task_for_user(db_session: Session, user_id: int, description: str, due_date: Optional[datetime.date] = None) -> Task:
     """Creates a new task for a given user, optionally including a due date."""
     new_task = Task(description=description, user_id=user_id, due_date=due_date)
     db_session.add(new_task)
@@ -79,7 +110,7 @@ def create_task_for_user(db_session: Session, user_id: int, description: str, du
         db_session.rollback()
         raise ServiceError(f"Database error occurred while creating task: {e}")
 
-def update_task_details(db_session: Session, task_id: int, user_id: int, description: Optional[str] = None, due_date: Optional[datetime.datetime] = None, set_due_date_none: bool = False) -> Task:
+def update_task_details(db_session: Session, task_id: int, user_id: int, description: Optional[str] = None, due_date: Optional[datetime.date] = None, set_due_date_none: bool = False) -> Task:
     """
     Updates a task's description and/or due date.
     `set_due_date_none=True` explicitly sets due_date to None.
