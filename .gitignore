@@ -26,3 +26,5 @@ dist/
 # IDE specific
 .idea/ # JetBrains
 .vscode/ # VS Code
+task_gamification.db
+task_gamification_app/webapp/.DS_Store
