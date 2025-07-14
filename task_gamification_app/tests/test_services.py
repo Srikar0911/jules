@@ -1,6 +1,7 @@
 import unittest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
 
 # Adjust the import path to find the app modules
 import sys
@@ -14,25 +15,58 @@ from task_gamification_app.app.services import (
     create_user,
     verify_user_login,
     UsernameExistsError,
+    UserCreationError,
     create_task_for_user,
     get_tasks_for_user,
     complete_task
 )
 
-class TestUserServices(unittest.TestCase):
+class BaseServiceTest(unittest.TestCase):
+    """
+    Base class for service tests that sets up a transactional in-memory DB.
+    This pattern ensures that each test runs in isolation.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        """Create an in-memory DB engine and tables once for the class."""
+        cls.engine = create_engine(
+            'sqlite:///:memory:',
+            # Using StaticPool is recommended for in-memory SQLite to ensure
+            # all sessions use the same single connection.
+            connect_args={"check_same_thread": False},
+            poolclass=StaticPool,
+        )
+        Base.metadata.create_all(cls.engine)
+        # Create a sessionmaker that will be used to create sessions
+        cls.Session = sessionmaker(bind=cls.engine)
 
     def setUp(self):
-        """Set up a temporary in-memory database for each test."""
-        self.engine = create_engine('sqlite:///:memory:')
-        Base.metadata.create_all(self.engine)
-        Session = sessionmaker(bind=self.engine)
-        self.session = Session()
+        """
+        For each test, create a new session and wrap it in a transaction.
+        The transaction will be rolled back in tearDown.
+        """
+        # This is the "transactional" part of the test setup
+        self.connection = self.engine.connect()
+        self.trans = self.connection.begin()
+        self.session = self.Session(bind=self.connection)
 
     def tearDown(self):
-        """Clean up the database after each test."""
+        """
+        Roll back the transaction and close the connection after each test.
+        This ensures tests are isolated from each other.
+        """
         self.session.close()
-        Base.metadata.drop_all(self.engine)
+        self.trans.rollback()
+        self.connection.close()
 
+    @classmethod
+    def tearDownClass(cls):
+        """Drop all tables after all tests in the class have run."""
+        Base.metadata.drop_all(cls.engine)
+
+
+class TestUserServices(BaseServiceTest):
     def test_create_user_success(self):
         """Test successful user creation."""
         user = create_user(self.session, "testuser", "test@example.com", "password123")
@@ -47,21 +81,21 @@ class TestUserServices(unittest.TestCase):
         with self.assertRaises(UsernameExistsError):
             create_user(self.session, "testuser", "test2@example.com", "anotherpassword")
 
+    def test_create_user_duplicate_email(self):
+        """Test that creating a user with a duplicate email raises an error."""
+        create_user(self.session, "testuser1", "test@example.com", "password123")
+        with self.assertRaises(UserCreationError): # The service raises UserCreationError for duplicate email
+            create_user(self.session, "testuser2", "test@example.com", "anotherpassword")
 
-class TestTaskServices(unittest.TestCase):
 
+class TestTaskServices(BaseServiceTest):
     def setUp(self):
-        """Set up a temporary in-memory database for each test."""
-        self.engine = create_engine('sqlite:///:memory:')
-        Base.metadata.create_all(self.engine)
-        Session = sessionmaker(bind=self.engine)
-        self.session = Session()
+        """
+        Extend the base setUp to create a user for task-related tests.
+        """
+        super().setUp() # This sets up the connection, transaction, and session
         self.user = create_user(self.session, "testuser", "test@example.com", "password123")
-
-    def tearDown(self):
-        """Clean up the database after each test."""
-        self.session.close()
-        Base.metadata.drop_all(self.engine)
+        # The user created here will be rolled back after the test.
 
     def test_filter_tasks(self):
         """Test filtering tasks by different criteria."""
