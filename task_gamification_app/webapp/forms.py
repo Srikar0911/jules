@@ -44,7 +44,7 @@ class ResetPasswordForm(FlaskForm):
     submit = SubmitField('Reset Password')
 
 class LoginForm(FlaskForm):
-    username = StringField('Username', validators=[DataRequired()])
+    username_or_email = StringField('Username or Email', validators=[DataRequired()])
     # email = StringField('Email', validators=[DataRequired(), Email()]) # If logging in with email
     password = PasswordField('Password', validators=[DataRequired()])
     remember = BooleanField('Remember Me') # Optional: for "remember me" functionality
@@ -77,6 +77,7 @@ class UpdateTaskForm(TaskForm):
 
 class EditUserForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired(), Length(min=2, max=20)])
+    email = StringField('Email', validators=[DataRequired(), Email()])
     submit = SubmitField('Update')
 
 class AddEmailForm(FlaskForm):

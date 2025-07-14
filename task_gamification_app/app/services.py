@@ -61,12 +61,12 @@ def create_user(db_session: Session, username: str, email: str, password: str) -
         raise UserCreationError(f"An unexpected error occurred during user creation: {e}")
 
 
-def verify_user_login(db_session: Session, username: str, password: str) -> Union[User, None]:
+def verify_user_login(db_session: Session, username_or_email: str, password: str) -> Union[User, None]:
     """
     Verifies user credentials.
     Returns the User object if login is successful, None otherwise.
     """
-    user = db_session.query(User).filter(User.username == username).first()
+    user = db_session.query(User).filter((User.username == username_or_email) | (User.email == username_or_email)).first()
     if user and user.check_password(password):
         return user
     return None

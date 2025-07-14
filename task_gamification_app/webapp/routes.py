@@ -90,7 +90,7 @@ def login():
             db_session = SessionLocal()
             user = verify_user_login_service(
                 db_session=db_session,
-                username=form.username.data,
+                username_or_email=form.username_or_email.data,
                 password=form.password.data
             )
             if user:
@@ -351,7 +351,8 @@ def edit_user():
             updated_user = update_user_service(
                 db_session=db_session,
                 user_id=user_id,
-                username=form.username.data
+                username=form.username.data,
+                email=form.email.data
             )
             session['username'] = updated_user.username
             flash('Your details have been updated.', 'success')
