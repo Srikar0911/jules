@@ -13,17 +13,25 @@ import sys
 # The imports are now absolute, consistent with the rest of the application.
 from task_gamification_app.webapp import app
 from task_gamification_app.app.db import init_db
+from task_gamification_app.run_migrations import run_migrations
 
 if __name__ == '__main__':
-    print("Initializing database (if needed)...")
+    print("Initializing database tables (if they don't exist)...")
     try:
-        init_db() # Create database tables if they don't exist
-        print("Database initialization check complete.")
+        init_db()
+        print("Database table initialization check complete.")
     except Exception as e:
-        print(f"Error during database initialization: {e}")
-        print("Please check your database configuration and models.")
-        # Decide if you want to exit or try to run the app anyway
-        # sys.exit(1)
+        print(f"Error during database table initialization: {e}")
+        sys.exit(1)
+
+    print("Running database migrations (if any)...")
+    try:
+        run_migrations()
+        print("Database migrations check complete.")
+    except Exception as e:
+        print(f"Error during database migrations: {e}")
+        print("Please check your database configuration and migration scripts.")
+        sys.exit(1) # It's unsafe to continue if migrations fail.
 
     print("Starting Flask development server...")
     # Debug mode should ideally be controlled by an environment variable for production

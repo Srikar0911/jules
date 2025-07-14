@@ -15,13 +15,6 @@ def get_migration_files():
 def run_migrations():
     """Runs all pending migrations."""
     engine = create_engine(DATABASE_URL)
-
-    # Add this import
-    from app.models import Base
-
-    # Create tables
-    Base.metadata.create_all(bind=engine)
-
     conn = engine.connect()
     ctx = MigrationContext.configure(conn)
     op = Operations(ctx)
