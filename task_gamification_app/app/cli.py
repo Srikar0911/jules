@@ -73,7 +73,7 @@ def login_user():
     db = get_db_session()
     try:
         # Use the service function to verify login
-        user_obj = verify_user_login_service(db_session=db, username=username, password=password)
+        user_obj = verify_user_login_service(db_session=db, username_or_email=username, password=password)
         if user_obj:
             CURRENT_USER_ID = user_obj.id
             print(f"Welcome, {username}! You are now logged in.")
